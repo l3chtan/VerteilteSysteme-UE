@@ -3,6 +3,7 @@ package chatserver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
 
 import util.Config;
 
@@ -12,6 +13,9 @@ public class Chatserver implements IChatserverCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
+
+	private int tcpPort, udpPort;
+	private HashMap<String,Integer> users;
 
 	/**
 	 * @param componentName
@@ -30,12 +34,25 @@ public class Chatserver implements IChatserverCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 
+		tcpPort = config.getInt("tcp.port");
+		udpPort = config.getInt("upd.port");
+
 		// TODO
 	}
 
 	@Override
 	public void run() {
-		// TODO
+		Listener tcpListen = null, udpListen = null;
+		try {
+			tcpListen = new TCPListener(config.getInt("tcp.port"));
+			udpListen = new UDPListener(config.getInt("udp.port"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		tcpListen.start();
+		udpListen.start();
 	}
 
 	@Override
@@ -50,6 +67,13 @@ public class Chatserver implements IChatserverCli, Runnable {
 		return null;
 	}
 
+	private void getUserConfig(Config config) {
+		users = new HashMap<>();
+		for(String s:config.listKeys()){
+			users.put(s.substring(0,s.lastIndexOf(".")),config.getInt(s));
+		}
+	}
+
 	/**
 	 * @param args
 	 *            the first argument is the name of the {@link Chatserver}
@@ -58,7 +82,7 @@ public class Chatserver implements IChatserverCli, Runnable {
 	public static void main(String[] args) {
 		Chatserver chatserver = new Chatserver(args[0],
 				new Config("chatserver"), System.in, System.out);
+		chatserver.getUserConfig(new Config("user"));
 		// TODO: start the chatserver
 	}
-
 }

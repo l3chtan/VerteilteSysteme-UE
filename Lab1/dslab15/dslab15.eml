@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component inheritJdk="true">
+	<exclude-output/>
+	<contentEntry url="file://$MODULE_DIR$"/>
+	<lib name="bcprov-jdk16-140.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/lib/bcprov-jdk16-140.jar!/"/>
+	</lib>
+	<lib name="commons-logging-1.1.3.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/lib/commons-logging-1.1.3.jar!/"/>
+	</lib>
+	<lib name="hamcrest-core-1.3.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/lib/hamcrest-core-1.3.jar!/"/>
+	</lib>
+	<lib name="junit-4.11.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/lib/junit-4.11.jar!/"/>
+	</lib>
+	<lib name="spring-core-4.1.0.RELEASE.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/lib/spring-core-4.1.0.RELEASE.jar!/"/>
+	</lib>
+	<lib name="spring-expression-4.1.0.RELEASE.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/lib/spring-expression-4.1.0.RELEASE.jar!/"/>
+	</lib>
+</component>
