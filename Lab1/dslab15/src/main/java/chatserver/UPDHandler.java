@@ -5,6 +5,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
+import util.Config;
+
 public class UPDHandler extends Thread {
 	private DatagramPacket packet;
 
@@ -20,8 +22,12 @@ public class UPDHandler extends Thread {
 			DatagramSocket dSoc = new DatagramSocket(packet.getSocketAddress());
 
 			if(data.toString().equals("!list")){
-				//TODO get list of people who are online
-				answer = ""; 
+				Config cfg = new Config("list");
+				for(String s: cfg.listKeys()){
+					if(cfg.getString(s).equals("online")){
+						answer += String.format("%s %s\n",s,cfg.getString(s));
+					}
+				}
 			} else {
 				answer = "unknown request";
 			}

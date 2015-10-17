@@ -14,7 +14,6 @@ public class Chatserver implements IChatserverCli, Runnable {
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
 
-	private int tcpPort, udpPort;
 	private HashMap<String,Integer> users;
 
 	/**
@@ -34,10 +33,16 @@ public class Chatserver implements IChatserverCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 
-		tcpPort = config.getInt("tcp.port");
-		udpPort = config.getInt("upd.port");
+		initList();
 
 		// TODO
+	}
+
+	private void initList() {
+		Config cfg = new Config("list");
+		for(String s: config.listKeys()) {
+			cfg.setProperty(s, "offline");
+		}
 	}
 
 	@Override
