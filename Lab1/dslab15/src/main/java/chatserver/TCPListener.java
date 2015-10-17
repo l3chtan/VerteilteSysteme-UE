@@ -2,7 +2,8 @@ package chatserver;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by et on 16.10.15.
@@ -10,25 +11,23 @@ import java.net.Socket;
 public class TCPListener extends Listener {
 	
 	private ServerSocket sSoc;
-	private TCPConnection con;
+	private ExecutorService pool;
 	
 	public TCPListener(int port) throws IOException{
 		sSoc = new ServerSocket(port);
-		con = new TCPConnection();
+		
+		pool = Executors.newCachedThreadPool();
 	}
 	
 	public void run(){
-		Socket soc = null;
 		
-		while(true){
-			try{
-				soc = sSoc.accept();
-				con.setSoc(soc);
-				con.start();
-
-			} catch(Exception e) {
-				
+		try{
+			while(true){
+				pool.execute(new TCPHandler(sSoc.accept()));
 			}
+
+		} catch(IOException e) {
+			pool.shutdown();
 		}
 	}
 }

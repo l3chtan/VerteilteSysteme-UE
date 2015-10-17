@@ -3,14 +3,12 @@ package chatserver;
 import java.io.IOException;
 import java.net.Socket;
 
-public class TCPConnection extends Thread{
+public class TCPHandler extends Thread{
 	private Socket soc;
 	
-	
-	public void setSoc(Socket soc) {
+	public TCPHandler(Socket soc){
 		this.soc = soc;
 	}
-
 
 	public void run(){
 		
