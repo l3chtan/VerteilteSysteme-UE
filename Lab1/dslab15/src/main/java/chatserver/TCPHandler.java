@@ -1,14 +1,20 @@
 package chatserver;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
+
+import util.Config;
 
 public class TCPHandler extends Thread{
+	private static BlockingQueue<String> publicMsgs;
 	private Socket soc;
-	private String logCmd = "!login";
+
 	
 	public TCPHandler(Socket soc){
 		this.soc = soc;
@@ -18,65 +24,63 @@ public class TCPHandler extends Thread{
 		
 		try {
 			InputStreamReader in = new InputStreamReader(soc.getInputStream());
-			BufferedReader buf = new BufferedReader(in);
-			String line = buf.readLine(), name = "", passwd = "";
+			BufferedReader bufIn = new BufferedReader(in);
+			
+			OutputStreamWriter out = new OutputStreamWriter(soc.getOutputStream());
+			BufferedWriter bufOut = new BufferedWriter(out);
+			
+			String line = bufIn.readLine(), name = "", passwd = "";
 
 			if(line.substring(0, line.indexOf(' ')).equals("!login")){
 				name = line.substring(line.indexOf(' '),line.lastIndexOf(' '));
 				passwd = line.substring(line.lastIndexOf(' '));
 			
-/*			byte[] login = new byte[logCmd.length()];
-			if(in.read(login,0,login.length) == logCmd.length() && logCmd.equals(login.toString())){
-				byte[] cred = new byte[256];
-				int cnt = in.read(cred);
-				String credString = cred.toString();
-*/
-			//TODO proceed with authentication and a welcome message
+				if(new Config("user").getInt(name+".password") != Integer.parseInt(passwd)){
+					bufOut.write("Wrong username or password.");
+					out.close();
+					in.close();
+					soc.close();
+					return;
+				}
+				bufOut.write("Successfully logged in.");
+				
 			//does buffered reader return null if there is nothing coming from the stream?
 				do{
 					//TODO send messages to client (or maybe later?)
-					line = buf.readLine();
+					line = bufIn.readLine();
 					String head = line.substring(0,line.indexOf(' '));
-					String body = line.substring(line.indexOf(' '));
+					String body = line.substring(line.indexOf(' ')+1);
 					
-					//TODO
+					Config registry = new Config("registry");
+					
 					 switch(head) {
 					 case "!send":
+						 publicMsgs.add(body);
 						 break;
 					 case "!register":
+						 registry.setProperty(name+".registry", body);
+						 bufOut.write("Successfully registered address for "+name);
 						 break;
 					 case "!lookup": 
-						 break;
-					 case "!msg":
+						 String ipPort = registry.getString(body+".registry");
+						 bufOut.write(ipPort);
 						 break;
 					 case "!logout":
+						 bufOut.write("Successfully logged out.");
+						 line = null;
 						 break;
 					 default:
 						 break;
 					}
-//					
-//					if(getCmd(line).equals("!send")){
-//						//TODO
-//					} else if(line.substring(0,line.indexOf(' ')).equals("!register")){
-//						//TODO
-//					} else if(line.substring(0,line.indexOf(' ')).equals("!lookup")){
-//						//TODO
-//					} else if(line.substring(0,line.indexOf(' ')).equals("!msg")){
-//						//TODO
-//					} else if(line.substring(0,line.indexOf(' ')).equals("!logout")){
-//						//TODO
-//					} else {
-//						//TODO
-//					}
-
 
 				} while(line != null); //maybe use while(true) ?
 
 			} else {
-				//TODO maybe send a line saying "first request must be: !login <username> <password>"
-				in.close();
-				//TODO return to listening
+				bufOut.write("You must be logged in first: !login <username> <password>");
 			}
+				out.close();
+				in.close();
+				soc.close();
 
 
 			
