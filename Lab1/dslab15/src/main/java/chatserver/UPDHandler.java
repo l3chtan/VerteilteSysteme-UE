@@ -21,6 +21,7 @@ public class UPDHandler extends Thread {
 		try {
 			DatagramSocket dSoc = new DatagramSocket(packet.getSocketAddress());
 
+			//maybe integrate status list into user.properties?
 			if(data.toString().equals("!list")){
 				Config cfg = new Config("list");
 				for(String s: cfg.listKeys()){

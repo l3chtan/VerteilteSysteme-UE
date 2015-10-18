@@ -46,7 +46,9 @@ public class TCPHandler extends Thread{
 				
 			//does buffered reader return null if there is nothing coming from the stream?
 				do{
-					//TODO send messages to client (or maybe later?)
+					//TODO send messages to client (or maybe later?) and probably use ObjectInputStream and ObjectOutputStream
+
+					
 					line = bufIn.readLine();
 					String head = line.substring(0,line.indexOf(' '));
 					String body = line.substring(line.indexOf(' ')+1);
