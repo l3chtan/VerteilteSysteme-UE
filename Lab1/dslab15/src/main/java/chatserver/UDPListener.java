@@ -16,7 +16,7 @@ public class UDPListener extends Listener {
 
 	public UDPListener(int port) throws IOException {
 		dSoc = new DatagramSocket(port);
-		pool = Executors.newCachedThreadPool();
+		pool = Executors.newCachedThreadPool(); //TODO maybe change cached thread pool to fixed size pool
 	}
 	
 	public void run(){
