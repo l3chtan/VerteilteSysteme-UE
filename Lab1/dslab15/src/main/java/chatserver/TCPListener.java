@@ -30,4 +30,9 @@ public class TCPListener extends Listener {
 			pool.shutdown();
 		}
 	}
+	
+	@Override
+	public void close() throws IOException{
+		sSoc.close();
+	}
 }

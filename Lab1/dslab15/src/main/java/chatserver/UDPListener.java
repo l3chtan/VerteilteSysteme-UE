@@ -22,7 +22,7 @@ public class UDPListener extends Listener {
 	public void run(){
 		try{
 			while(true){
-				byte[] buf = new byte[256];
+				byte[] buf = new byte[1024];
 				DatagramPacket dp = new DatagramPacket(buf,buf.length);
 				dSoc.receive(dp);
 				pool.execute(new UPDHandler(dp));
@@ -30,5 +30,10 @@ public class UDPListener extends Listener {
 		}catch(IOException e) {
 			
 		}
+	}
+
+	@Override
+	public void close() throws IOException {
+		dSoc.close();		
 	}
 }

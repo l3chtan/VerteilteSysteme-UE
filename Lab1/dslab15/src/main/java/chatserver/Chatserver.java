@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import util.Config;
 
@@ -13,6 +14,8 @@ public class Chatserver implements IChatserverCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
+
+	Listener tcpListen, udpListen;
 
 	private HashMap<String,Integer> users;
 
@@ -32,8 +35,13 @@ public class Chatserver implements IChatserverCli, Runnable {
 		this.config = config;
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
+		
+		tcpListen = null;
+		udpListen = null;
 
 		initList();
+		//is this good?
+		Handler handle = new Handler(new ConcurrentSkipListMap<String,User>());
 
 		// TODO
 	}
@@ -47,7 +55,6 @@ public class Chatserver implements IChatserverCli, Runnable {
 
 	@Override
 	public void run() {
-		Listener tcpListen = null, udpListen = null;
 		try {
 			tcpListen = new TCPListener(config.getInt("tcp.port"));
 			udpListen = new UDPListener(config.getInt("udp.port"));
@@ -62,13 +69,19 @@ public class Chatserver implements IChatserverCli, Runnable {
 
 	@Override
 	public String users() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		String result = "";
+		Config lst = new Config("list");
+		for(String s: lst.listKeys()){
+			result += String.format("%s %s\n", s,lst.getString(s));
+		}
+		return result;
 	}
 
 	@Override
 	public String exit() throws IOException {
 		// TODO Auto-generated method stub
+		tcpListen.close();
+		udpListen.close();
 		return null;
 	}
 

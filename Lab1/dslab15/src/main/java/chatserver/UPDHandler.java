@@ -4,13 +4,15 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.HashMap;
 
 import util.Config;
 
-public class UPDHandler extends Thread {
+public class UPDHandler extends Handler {
 	private DatagramPacket packet;
 
-	public UPDHandler(DatagramPacket packet) {
+	public UPDHandler(DatagramPacket packet/*, HashMap<String, User> users*/) {
+//		super(users);
 		this.packet = packet;
 	}
 
@@ -21,13 +23,11 @@ public class UPDHandler extends Thread {
 		try {
 			DatagramSocket dSoc = new DatagramSocket(packet.getSocketAddress());
 
-			//maybe integrate status list into user.properties?
 			if(data.toString().equals("!list")){
-				Config cfg = new Config("list");
-				for(String s: cfg.listKeys()){
-					if(cfg.getString(s).equals("online")){
-						answer += String.format("%s %s\n",s,cfg.getString(s));
-					}
+				answer += "Online users:\n";
+
+				for(User u: getOnline()){
+					answer += String.format("* %s\n", u.getName());
 				}
 			} else {
 				answer = "unknown request";
