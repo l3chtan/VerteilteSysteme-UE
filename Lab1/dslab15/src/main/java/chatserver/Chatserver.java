@@ -17,7 +17,7 @@ public class Chatserver implements IChatserverCli, Runnable {
 
 	Listener tcpListen, udpListen;
 
-	private HashMap<String,Integer> users;
+	private ConcurrentSkipListMap<String,User> userConfig;
 
 	/**
 	 * @param componentName
@@ -39,18 +39,11 @@ public class Chatserver implements IChatserverCli, Runnable {
 		tcpListen = null;
 		udpListen = null;
 
-		initList();
 		//is this good?
-		Handler handle = new Handler(new ConcurrentSkipListMap<String,User>());
+		getUserConfig(new Config("User"));
+		Handler handle = new Handler(userConfig);
 
 		// TODO
-	}
-
-	private void initList() {
-		Config cfg = new Config("list");
-		for(String s: config.listKeys()) {
-			cfg.setProperty(s, "offline");
-		}
 	}
 
 	@Override
@@ -86,9 +79,26 @@ public class Chatserver implements IChatserverCli, Runnable {
 	}
 
 	private void getUserConfig(Config config) {
-		users = new HashMap<>();
+		userConfig = new ConcurrentSkipListMap<String,User>();
+
 		for(String s:config.listKeys()){
-			users.put(s.substring(0,s.lastIndexOf(".")),config.getInt(s));
+			String name = s.substring(0,s.lastIndexOf("."));
+			String entry = s.substring(s.lastIndexOf('.'));
+
+			if(entry.equals("password")){
+				User newUser = new User(name,config.getInt(s));
+				User old = userConfig.putIfAbsent(name,newUser);
+				if(old != null && old.getPassword() == -1){
+					newUser.setRegistry(old.getRegistry());
+					userConfig.replace(name, newUser);
+				}
+			} else if(entry.equals("registry")){
+				User u = userConfig.get(name);
+				if(u == null){
+					userConfig.put(name, new User(name,-1));
+				}
+				u.setRegistry(config.getString(s));
+			}
 		}
 	}
 
