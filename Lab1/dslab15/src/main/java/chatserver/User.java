@@ -38,5 +38,10 @@ public class User {
 	}
 	public void setWriter(BufferedWriter writer) {
 		this.writer = writer;
+	}
+
+	public String getStatus() {
+		if(online) return "online";
+		return "offline";
 	}	
 }

@@ -1,9 +1,18 @@
 package client;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
+import cli.Command;
+import cli.Shell;
 import util.Config;
 
 public class Client implements IClientCli, Runnable {
@@ -12,6 +21,19 @@ public class Client implements IClientCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
+	
+	private Socket socket;
+	private DatagramSocket dataSocket;
+	
+	private TCPClient tcpCon;
+	private UDPClient udpCon;
+	
+	private BufferedReader reader;
+	private BufferedWriter writer;
+	
+	private Shell shell;
+	
+	private String lastMsg;
 
 	/**
 	 * @param componentName
@@ -29,64 +51,120 @@ public class Client implements IClientCli, Runnable {
 		this.config = config;
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
+		
 
+		shell = new Shell(componentName,userRequestStream,userResponseStream);
+		shell.register(this);
+		shell.
+		
+		lastMsg = null;
+		
 		// TODO
 	}
 
 	@Override
 	public void run() {
+		try {
+			tcpCon = new TCPClient(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"));
+			tcpCon.start();
+//			socket = new Socket(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"));
+
+//			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//			writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+			reader = tcpCon.getReader();
+			writer = tcpCon.getWriter();
+			
+			udpCon = new UDPClient();
+			udpCon.start();
+
+			
+//			dataSocket = new DatagramSocket();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		new Thread(shell).start();
+		
+		while(true){
+			try {
+				shell.writeLine(reader.readLine());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		// TODO
 	}
 
 	@Override
+	@Command
 	public String login(String username, String password) throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		String out = "";
+		tcpCon.interrupt();
+		if(tcpCon.isInterrupted()){
+			writer.write("!login " + username + " " + password +"\n");
+			out = reader.readLine();
+		}
+		return out;
 	}
 
 	@Override
+	@Command
 	public String logout() throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		writer.write("!logout\n");
+		return reader.readLine();
 	}
 
 	@Override
+	@Command
 	public String send(String message) throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		writer.write("!send "+message+"\n");
+		return reader.readLine();
 	}
 
 	@Override
+	@Command
 	public String list() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
+	@Command
 	public String msg(String username, String message) throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
+	@Command
 	public String lookup(String username) throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		writer.write("!lookup "+username+"\n");
+		return reader.readLine();
 	}
 
 	@Override
+	@Command
 	public String register(String privateAddress) throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	@Override
+	@Command
 	public String lastMsg() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		if(lastMsg != null) return lastMsg;
+		return "No message received !";
 	}
 
 	@Override
+	@Command
 	public String exit() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
@@ -100,6 +178,7 @@ public class Client implements IClientCli, Runnable {
 		Client client = new Client(args[0], new Config("client"), System.in,
 				System.out);
 		// TODO: start the client
+		client.run();
 	}
 
 	// --- Commands needed for Lab 2. Please note that you do not have to

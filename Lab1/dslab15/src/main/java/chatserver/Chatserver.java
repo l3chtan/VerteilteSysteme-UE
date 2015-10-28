@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import cli.Shell;
 import util.Config;
 
 public class Chatserver implements IChatserverCli, Runnable {
@@ -14,6 +15,8 @@ public class Chatserver implements IChatserverCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
+	
+	private Shell shell;
 
 	Listener tcpListen, udpListen;
 
@@ -38,10 +41,15 @@ public class Chatserver implements IChatserverCli, Runnable {
 		
 		tcpListen = null;
 		udpListen = null;
+		
+		shell = new Shell(componentName,userRequestStream,userResponseStream);
+		shell.register(this);
 
 		//is this good?
 		getUserConfig(new Config("User"));
 		Handler handle = new Handler(userConfig);
+		
+		
 
 		// TODO
 	}
@@ -58,14 +66,19 @@ public class Chatserver implements IChatserverCli, Runnable {
 
 		tcpListen.start();
 		udpListen.start();
+		
+		new Thread(shell).start();
 	}
 
 	@Override
 	public String users() throws IOException {
 		String result = "";
-		Config lst = new Config("list");
-		for(String s: lst.listKeys()){
-			result += String.format("%s %s\n", s,lst.getString(s));
+		Config users = new Config("User");
+		for(String s: users.listKeys()){
+			if(s.substring(s.lastIndexOf('.')+1).equals("password")){
+				String user = s.substring(0, s.lastIndexOf('.'));
+				result += String.format("%s %s\n", user,userConfig.get(user).getStatus());
+			}
 		}
 		return result;
 	}
@@ -110,7 +123,7 @@ public class Chatserver implements IChatserverCli, Runnable {
 	public static void main(String[] args) {
 		Chatserver chatserver = new Chatserver(args[0],
 				new Config("chatserver"), System.in, System.out);
-		chatserver.getUserConfig(new Config("user"));
 		// TODO: start the chatserver
+		chatserver.run();
 	}
 }
