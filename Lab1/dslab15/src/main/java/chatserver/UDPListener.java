@@ -22,13 +22,14 @@ public class UDPListener extends Listener {
 	public void run(){
 		try{
 			while(true){
-				byte[] buf = new byte[1024];
+				byte[] buf = new byte[2048];
 				DatagramPacket dp = new DatagramPacket(buf,buf.length);
 				dSoc.receive(dp);
-				pool.execute(new UPDHandler(dp));
+				System.out.println("upd listen");
+				pool.execute(new UPDHandler(dSoc, dp));
 			}
 		}catch(IOException e) {
-			
+			System.out.println(e.getMessage());
 		}
 	}
 

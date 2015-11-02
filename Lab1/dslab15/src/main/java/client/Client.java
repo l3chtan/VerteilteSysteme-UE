@@ -55,7 +55,6 @@ public class Client implements IClientCli, Runnable {
 
 		shell = new Shell(componentName,userRequestStream,userResponseStream);
 		shell.register(this);
-		shell.
 		
 		lastMsg = null;
 		
@@ -65,36 +64,29 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	public void run() {
 		try {
-			tcpCon = new TCPClient(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"));
+			tcpCon = new TCPClient(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"),shell.getOut());
 			tcpCon.start();
-//			socket = new Socket(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"));
 
-//			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//			writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-			reader = tcpCon.getReader();
-			writer = tcpCon.getWriter();
-			
-			udpCon = new UDPClient();
-			udpCon.start();
-
-			
-//			dataSocket = new DatagramSocket();
+			while(reader == null || writer == null){
+				reader = tcpCon.getReader();
+				writer = tcpCon.getWriter();
+			}
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
 		new Thread(shell).start();
 		
-		while(true){
-			try {
-				shell.writeLine(reader.readLine());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+//		while(true){
+//			try {
+//				shell.writeLine(reader.readLine());
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
 		// TODO
 	}
 
@@ -104,7 +96,7 @@ public class Client implements IClientCli, Runnable {
 		// TODO Auto-generated method stub
 		String out = "";
 		tcpCon.interrupt();
-		if(tcpCon.isInterrupted()){
+		if(tcpCon.isInterrupted()){		
 			writer.write("!login " + username + " " + password +"\n");
 			out = reader.readLine();
 		}
@@ -123,6 +115,7 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String send(String message) throws IOException {
 		// TODO Auto-generated method stub
+		System.out.println("foo");
 		writer.write("!send "+message+"\n");
 		return reader.readLine();
 	}
@@ -131,6 +124,8 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String list() throws IOException {
 		// TODO Auto-generated method stub
+			udpCon = new UDPClient(config.getString("chatserver.host"),config.getInt("chatserver.udp.port"),shell.getOut());
+			udpCon.start();
 		return null;
 	}
 
@@ -167,6 +162,7 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String exit() throws IOException {
 		// TODO Auto-generated method stub
+		socket.close();
 		return null;
 	}
 

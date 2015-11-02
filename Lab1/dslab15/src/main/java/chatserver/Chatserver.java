@@ -3,10 +3,13 @@ package chatserver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import cli.Shell;
+import cli.Command;
 import util.Config;
 
 public class Chatserver implements IChatserverCli, Runnable {
@@ -46,7 +49,7 @@ public class Chatserver implements IChatserverCli, Runnable {
 		shell.register(this);
 
 		//is this good?
-		getUserConfig(new Config("User"));
+		getUserConfig(new Config("user"));
 		Handler handle = new Handler(userConfig);
 		
 		
@@ -71,9 +74,10 @@ public class Chatserver implements IChatserverCli, Runnable {
 	}
 
 	@Override
+	@Command
 	public String users() throws IOException {
 		String result = "";
-		Config users = new Config("User");
+		Config users = new Config("user");
 		for(String s: users.listKeys()){
 			if(s.substring(s.lastIndexOf('.')+1).equals("password")){
 				String user = s.substring(0, s.lastIndexOf('.'));
@@ -84,11 +88,18 @@ public class Chatserver implements IChatserverCli, Runnable {
 	}
 
 	@Override
+	@Command
 	public String exit() throws IOException {
 		// TODO Auto-generated method stub
+		
+//		Collection<User> bq = userConfig.values();
+//		for(User u: bq){
+//			u.closeSocket();
+//		}
 		tcpListen.close();
 		udpListen.close();
-		return null;
+		shell.close();
+		return "server shutdown";
 	}
 
 	private void getUserConfig(Config config) {
@@ -96,7 +107,7 @@ public class Chatserver implements IChatserverCli, Runnable {
 
 		for(String s:config.listKeys()){
 			String name = s.substring(0,s.lastIndexOf("."));
-			String entry = s.substring(s.lastIndexOf('.'));
+			String entry = s.substring(s.lastIndexOf('.')+1);
 
 			if(entry.equals("password")){
 				User newUser = new User(name,config.getInt(s));

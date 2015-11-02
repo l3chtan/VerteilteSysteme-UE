@@ -21,6 +21,10 @@ public class TCPHandler extends Handler{
 //		super(users);
 		this.soc = soc;
 	}
+	
+	public void close() throws IOException{
+		soc.close();
+	}
 
 	public void run(){
 		
@@ -30,7 +34,7 @@ public class TCPHandler extends Handler{
 			
 			OutputStreamWriter out = new OutputStreamWriter(soc.getOutputStream());
 //			BufferedWriter bufOut = new BufferedWriter(out);
-			user.setWriter(new BufferedWriter(out));
+			BufferedWriter wr = new BufferedWriter(out);
 			
 			String line = bufIn.readLine(), passwd = "";
 
@@ -46,7 +50,9 @@ public class TCPHandler extends Handler{
 					soc.close();
 					return;
 				}
+				user.setSocket(soc);
 				user.setOnline(true);
+				user.setWriter(wr);
 				user.write("Successfully logged in.");
 				
 			//does buffered reader return null if there is nothing coming from the stream?
@@ -93,8 +99,15 @@ public class TCPHandler extends Handler{
 				in.close();
 				soc.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+				System.out.println(e.getClass().getSimpleName() +": "+  e.getMessage());
+		} finally {
+			
+			if(soc != null && !soc.isClosed())
+				try {
+					soc.close();
+				} catch (IOException e1) {
+					System.out.println(e1.getClass().getSimpleName() +": "+  e1.getMessage());
+				}
 		}
 	}
 }
