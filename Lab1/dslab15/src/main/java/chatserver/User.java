@@ -15,6 +15,7 @@ public class User {
 	public User(String name, int password){
 		this.name = name;
 		this.password = password;
+		registry = "User is not registered";
 	}
 
 	public String getName() {

@@ -20,11 +20,12 @@ public class UPDHandler extends Handler {
 	@Override
 	public void run() {
 		byte[] data = packet.getData();
+		System.out.println("data: "+new String(data));
 		try {
 
 			if(new String(data).startsWith("!list")){
 				if(!getOnline().isEmpty()){
-					data = "Online users:\n".getBytes();
+					data = "Online users:".getBytes();
 					packet.setData(data);
 					dSoc.send(packet);
 
@@ -33,6 +34,7 @@ public class UPDHandler extends Handler {
 						packet.setData(data);
 						dSoc.send(packet);
 					}
+					return;
 				} else {
 					data = "No users online\n".getBytes();
 				}

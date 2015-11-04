@@ -34,30 +34,31 @@ public class UDPClient extends Thread {
 	
 	public void run(){
 		byte[] buffer = new byte[2048];
+		String answer = "";
 		DatagramPacket rc = new DatagramPacket(buffer,buffer.length);
 		try {
 			socket = new DatagramSocket();
-			System.out.println(new String(cmd));
+//			System.out.println(new String(cmd));
 			socket.send(new DatagramPacket(cmd,cmd.length,InetAddress.getByName(host),port));
-			System.out.println("sent");
 
-			socket.setSoTimeout(5000);
+			socket.setSoTimeout(1000);
 			while(true){
 				try{
 					socket.receive(rc);
-					writeOut(rc.getData());
-					if(new String(rc.getData()).startsWith("No users online\n")){
-						socket.close();
+					answer += String.format("%s\n", new String(rc.getData()));
+//					writeOut(rc.getData());
+					if(new String(rc.getData()).startsWith("No users online")){
+						writeOut(answer.getBytes());
 						break;
 					}
 				} catch (SocketTimeoutException e){
-					break;
+					socket.close();
+					writeOut(answer.getBytes());
+					return;
 				}
 			}
-			System.out.println("done");
 		} catch (IOException e) {
-			System.out.println("exception");
-
+			socket.close();
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

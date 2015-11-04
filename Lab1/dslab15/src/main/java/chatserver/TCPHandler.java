@@ -41,11 +41,11 @@ public class TCPHandler extends Handler{
 				
 			do{
 				line = bufIn.readLine();
-				System.out.println(line);
 				if(line == null) {
 					System.out.println("Client "+soc.getInetAddress()+":"+soc.getPort()+" has terminated the connection");
-					in.close();
-					out.close();
+					if(user != null){
+						user.setOnline(false);
+					}
 					if(!soc.isClosed()){
 						soc.close();
 					}
@@ -58,12 +58,10 @@ public class TCPHandler extends Handler{
 				} else {
 					head = line;
 				}
-				
-				
+				String subs[];
 				switch(head) {
 					case "!login":
-						System.out.println("here");
-						String subs[] = body.split("\\s");
+						subs = body.split("\\s");
 						user = getUser(subs[0]);
 						if(user == null) System.out.println("user is null");
 						if( user == null || this.user.getPassword() != Integer.parseInt(subs[1])) {
@@ -74,27 +72,28 @@ public class TCPHandler extends Handler{
 							user.setWriter(wr);
 							msg = "Successfully logged in.";
 						}
-						System.out.println("wooooo");
 						break;
 					case "!send":
 						for(User u: getOnline()){
 							if(u != user){
-								u.write(body);
+								u.write(user.getName()+": "+body);
 							}
 						}
 						break;
 
 					case "!register":
 						registry.setProperty(user+".registry", body);
+						user.setRegistry(body);
 						msg = "Successfully registered address for "+user.getName();
 						break;
 
 					case "!lookup": 
-						msg = registry.getString(body+".registry");
+						msg = getUser(body).getRegistry();
 						break;
 
 					case "!logout":
 						user.setOnline(false);
+						System.out.println("online: "+user.isOnline());
 						msg = "Successfully logged out.";
 						line = null;
 						break;
@@ -102,20 +101,18 @@ public class TCPHandler extends Handler{
 					default:
 						break; //maybe breaks loop
 				}
-				if(!head.equals("!send")){
-					System.out.println("head: "+head);
-				if(user != null){
-					user.write(msg);
-				} else {
-					wr.println(msg);
-				}
+				if(!head.startsWith("!send")){
+					if(user != null){
+						user.write(msg);
+					} else {
+						wr.println(msg);
+					}
 				}
 
 			} while(line != null); //maybe use while(true) ?
 /*			} else {
 				wr.write("You must be logged in first: !login <username> <password>");
 			}*/
-			System.out.println("foo");
 				out.close();
 				in.close();
 				soc.close();

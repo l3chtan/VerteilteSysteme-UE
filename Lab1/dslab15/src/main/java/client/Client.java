@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.DatagramSocket;
@@ -27,6 +28,8 @@ public class Client implements IClientCli, Runnable {
 	
 	private TCPClient tcpCon;
 	private UDPClient udpCon;
+	private TCPReader tcpRead;
+	private boolean listening;
 	
 	private BufferedReader reader;
 	private PrintWriter writer;
@@ -57,6 +60,7 @@ public class Client implements IClientCli, Runnable {
 		shell.register(this);
 		
 		lastMsg = null;
+		listening = false;
 		
 		// TODO
 	}
@@ -76,25 +80,78 @@ public class Client implements IClientCli, Runnable {
 //		}
 		// TODO
 	}
+	
+	private void listen(){
+		String msg ="";
+		while(listening){
+			try {
+				msg = reader.readLine();
+				shell.writeLine(msg);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return;
+			}
+		}
+	}
+	
+	private String doIO(String msg){
+		String str = "";
+		try {
+			tcpRead.interrupt();
+			if(tcpRead.isInterrupted()){
+			if(msg != null){
+				writer.println(msg);
+			}
+				str = reader.readLine();
+			}
+		}catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		tcpRead.start();
+		System.out.println("everything went fine");
+		return str;
+	}
 
 	@Override
 	@Command
 	public String login(String username, String password) throws IOException {
 		// TODO Auto-generated method stub
 
-		tcpCon = new TCPClient(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"),shell.getOut());
-		tcpCon.start();
+//		tcpCon = new TCPClient(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"),shell.getOut());
+//		tcpCon.start();
+		String host = config.getString("chatserver.host");
+		int port = config.getInt("chatserver.tcp.port");
+		
+		
+		try {
+			socket = new Socket(host,port);
+			InputStream in = socket.getInputStream();
+			OutputStream out = socket.getOutputStream();
+			reader = new BufferedReader(new InputStreamReader(in));
+			writer = new PrintWriter(new OutputStreamWriter(out),true);
+			
+			tcpRead = new TCPReader(reader,shell.getOut());
 
-		while(reader == null || writer == null){
-			reader = tcpCon.getReader();
-			writer = tcpCon.getWriter();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		writer.println("!login " + username + " " + password);
-
-		String str = reader.readLine();
+			String str = "";
+			writer.println("!login " + username + " " + password);
+			
+			str = reader.readLine();
 		if(str.startsWith("Wrong")){
-			tcpCon.close();
-		}
+//			tcpCon.close();
+			socket.close();
+			return null;
+		} 
+//		else {
+//			listening = true;
+//			listen();
+//		}
+			tcpRead.start();
 		return str;
 	}
 
@@ -103,17 +160,16 @@ public class Client implements IClientCli, Runnable {
 	public String logout() throws IOException {
 		// TODO Auto-generated method stub
 		writer.println("!logout\n");
-		tcpCon.close();
-		return reader.readLine();
+//		tcpCon.close();
+		socket.close();
+		return "Successfully logged out.";
 	}
 
 	@Override
 	@Command
 	public String send(String message) throws IOException {
-		// TODO Auto-generated method stub
-		System.out.println("foo");
-		writer.println("!send "+message+"\n");
-		return reader.readLine();
+		writer.println("!send "+message);
+		return null;
 	}
 
 	@Override
@@ -129,6 +185,8 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String msg(String username, String message) throws IOException {
 		// TODO Auto-generated method stub
+		String subs[] = lookup(username).split(":");
+		Socket soc = new Socket(subs[0],Integer.parseInt(subs[1]));
 		return null;
 	}
 
@@ -136,22 +194,24 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String lookup(String username) throws IOException {
 		// TODO Auto-generated method stub
-		writer.println("!lookup "+username+"\n");
-		return reader.readLine();
+		writer.println("!lookup "+username);
+		tcpRead.interrupt();
+		String addr = reader.readLine();
+		return addr;
 	}
 
 	@Override
 	@Command
 	public String register(String privateAddress) throws IOException {
 		// TODO Auto-generated method stub
+		writer.println("!register "+privateAddress);
 		return null;
 	}
 	
 	@Override
 	@Command
 	public String lastMsg() throws IOException {
-		if(lastMsg != null) return lastMsg;
-		return "No message received !";
+		return tcpRead.getLstMsg();
 	}
 
 	@Override
