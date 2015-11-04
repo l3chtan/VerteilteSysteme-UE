@@ -1,6 +1,6 @@
 package chatserver;
 
-import java.io.BufferedWriter;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -9,7 +9,7 @@ public class User {
 	private final int password;
 	private String registry; 
 	private boolean online;
-	private BufferedWriter writer;
+	private PrintWriter writer;
 	private Socket socket;
 
 	public User(String name, int password){
@@ -36,9 +36,9 @@ public class User {
 		this.online = online;
 	}
 	public void write(String msg) throws IOException {
-		writer.write(msg);
+		writer.println(msg);
 	}
-	public void setWriter(BufferedWriter writer) {
+	public void setWriter(PrintWriter writer) {
 		this.writer = writer;
 	}
 

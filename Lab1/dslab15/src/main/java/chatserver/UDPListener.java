@@ -25,7 +25,6 @@ public class UDPListener extends Listener {
 				byte[] buf = new byte[2048];
 				DatagramPacket dp = new DatagramPacket(buf,buf.length);
 				dSoc.receive(dp);
-				System.out.println("upd listen");
 				pool.execute(new UPDHandler(dSoc, dp));
 			}
 		}catch(IOException e) {

@@ -34,8 +34,10 @@ public class TCPListener extends Listener {
 				socs.add(soc);
 				pool.execute(new TCPHandler(soc));
 			}
+//			System.out.println("terminated");
 
 		} catch (IOException e) {
+			System.out.println("caught");
 			System.out.println(e.getClass().getSimpleName() + ": " + e.getMessage());
 			// e.printStackTrace();
 		} finally {

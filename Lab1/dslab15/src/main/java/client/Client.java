@@ -1,7 +1,7 @@
 package client;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,7 +29,7 @@ public class Client implements IClientCli, Runnable {
 	private UDPClient udpCon;
 	
 	private BufferedReader reader;
-	private BufferedWriter writer;
+	private PrintWriter writer;
 	
 	private Shell shell;
 	
@@ -63,19 +63,6 @@ public class Client implements IClientCli, Runnable {
 
 	@Override
 	public void run() {
-		try {
-			tcpCon = new TCPClient(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"),shell.getOut());
-			tcpCon.start();
-
-			while(reader == null || writer == null){
-				reader = tcpCon.getReader();
-				writer = tcpCon.getWriter();
-			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
 		new Thread(shell).start();
 		
@@ -94,20 +81,29 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String login(String username, String password) throws IOException {
 		// TODO Auto-generated method stub
-		String out = "";
-		tcpCon.interrupt();
-		if(tcpCon.isInterrupted()){		
-			writer.write("!login " + username + " " + password +"\n");
-			out = reader.readLine();
+
+		tcpCon = new TCPClient(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"),shell.getOut());
+		tcpCon.start();
+
+		while(reader == null || writer == null){
+			reader = tcpCon.getReader();
+			writer = tcpCon.getWriter();
 		}
-		return out;
+		writer.println("!login " + username + " " + password);
+
+		String str = reader.readLine();
+		if(str.startsWith("Wrong")){
+			tcpCon.close();
+		}
+		return str;
 	}
 
 	@Override
 	@Command
 	public String logout() throws IOException {
 		// TODO Auto-generated method stub
-		writer.write("!logout\n");
+		writer.println("!logout\n");
+		tcpCon.close();
 		return reader.readLine();
 	}
 
@@ -116,7 +112,7 @@ public class Client implements IClientCli, Runnable {
 	public String send(String message) throws IOException {
 		// TODO Auto-generated method stub
 		System.out.println("foo");
-		writer.write("!send "+message+"\n");
+		writer.println("!send "+message+"\n");
 		return reader.readLine();
 	}
 
@@ -140,7 +136,7 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String lookup(String username) throws IOException {
 		// TODO Auto-generated method stub
-		writer.write("!lookup "+username+"\n");
+		writer.println("!lookup "+username+"\n");
 		return reader.readLine();
 	}
 

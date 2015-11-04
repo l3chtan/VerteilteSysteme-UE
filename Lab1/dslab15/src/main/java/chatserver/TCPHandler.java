@@ -1,7 +1,7 @@
 package chatserver;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -17,9 +17,9 @@ public class TCPHandler extends Handler{
 	private User user;
 
 	
-	public TCPHandler(Socket soc/*, HashMap<String, User> users*/){
-//		super(users);
+	public TCPHandler(Socket soc){
 		this.soc = soc;
+		user = null;
 	}
 	
 	public void close() throws IOException{
@@ -33,68 +33,89 @@ public class TCPHandler extends Handler{
 			BufferedReader bufIn = new BufferedReader(in);
 			
 			OutputStreamWriter out = new OutputStreamWriter(soc.getOutputStream());
-//			BufferedWriter bufOut = new BufferedWriter(out);
-			BufferedWriter wr = new BufferedWriter(out);
+			PrintWriter wr = new PrintWriter(out,true);
 			
-			String line = bufIn.readLine(), passwd = "";
-
-			if(line.substring(0, line.indexOf(' ')).equals("!login")){
-				//TODO check if user is already logged in
-				user = getUser(line.substring(line.indexOf(' '),line.lastIndexOf(' ')));
-				passwd = line.substring(line.lastIndexOf(' '));
-
-				if( user == null || this.user.getPassword() != Integer.parseInt(passwd)) {
-					user.write("Wrong username or password.");
-					out.close();
+			String line = "";
+			Config registry = new Config("user");
+			String msg = "You must be logged in first: !login <username> <password>";
+				
+			do{
+				line = bufIn.readLine();
+				System.out.println(line);
+				if(line == null) {
+					System.out.println("Client "+soc.getInetAddress()+":"+soc.getPort()+" has terminated the connection");
 					in.close();
-					soc.close();
+					out.close();
+					if(!soc.isClosed()){
+						soc.close();
+					}
 					return;
 				}
-				user.setSocket(soc);
-				user.setOnline(true);
-				user.setWriter(wr);
-				user.write("Successfully logged in.");
+				String head = "", body = "";
+				if(line.contains(" ")){
+					head = line.substring(0,line.indexOf(' '));
+					body = line.substring(line.indexOf(' ')+1);
+				} else {
+					head = line;
+				}
 				
-			//does buffered reader return null if there is nothing coming from the stream?
-				do{
-					line = bufIn.readLine();
-					String head = line.substring(0,line.indexOf(' '));
-					String body = line.substring(line.indexOf(' ')+1);
-					
-					Config registry = new Config("user");
-					
-					switch(head) {
-						case "!send":
-							for(User u: getOnline()){
+				
+				switch(head) {
+					case "!login":
+						System.out.println("here");
+						String subs[] = body.split("\\s");
+						user = getUser(subs[0]);
+						if(user == null) System.out.println("user is null");
+						if( user == null || this.user.getPassword() != Integer.parseInt(subs[1])) {
+							msg = "Wrong username or password.";
+						} else {
+							user.setSocket(soc);
+							user.setOnline(true);
+							user.setWriter(wr);
+							msg = "Successfully logged in.";
+						}
+						System.out.println("wooooo");
+						break;
+					case "!send":
+						for(User u: getOnline()){
+							if(u != user){
 								u.write(body);
 							}
-							break;
+						}
+						break;
 
-						case "!register":
-							registry.setProperty(user+".registry", body);
-							user.write("Successfully registered address for "+user);
-							break;
+					case "!register":
+						registry.setProperty(user+".registry", body);
+						msg = "Successfully registered address for "+user.getName();
+						break;
 
-						case "!lookup": 
-							String ipPort = registry.getString(body+".registry");
-							user.write(ipPort);
-							break;
+					case "!lookup": 
+						msg = registry.getString(body+".registry");
+						break;
 
-						case "!logout":
-							user.setOnline(false);
-							user.write("Successfully logged out.");
-							line = null;
-							break;
+					case "!logout":
+						user.setOnline(false);
+						msg = "Successfully logged out.";
+						line = null;
+						break;
 
-						default:
-							break; //maybe breaks loop
-					}
+					default:
+						break; //maybe breaks loop
+				}
+				if(!head.equals("!send")){
+					System.out.println("head: "+head);
+				if(user != null){
+					user.write(msg);
+				} else {
+					wr.println(msg);
+				}
+				}
 
-				} while(line != null); //maybe use while(true) ?
-
-			} else {
-				user.write("You must be logged in first: !login <username> <password>");
-			}
+			} while(line != null); //maybe use while(true) ?
+/*			} else {
+				wr.write("You must be logged in first: !login <username> <password>");
+			}*/
+			System.out.println("foo");
 				out.close();
 				in.close();
 				soc.close();

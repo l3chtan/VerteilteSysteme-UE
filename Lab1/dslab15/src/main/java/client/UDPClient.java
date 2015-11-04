@@ -6,6 +6,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 public class UDPClient extends Thread {
 	
@@ -36,14 +37,27 @@ public class UDPClient extends Thread {
 		DatagramPacket rc = new DatagramPacket(buffer,buffer.length);
 		try {
 			socket = new DatagramSocket();
-			System.out.println(cmd.toString());
+			System.out.println(new String(cmd));
 			socket.send(new DatagramPacket(cmd,cmd.length,InetAddress.getByName(host),port));
 			System.out.println("sent");
+
+			socket.setSoTimeout(5000);
 			while(true){
-				socket.receive(rc);
-				writeOut(rc.getData());
+				try{
+					socket.receive(rc);
+					writeOut(rc.getData());
+					if(new String(rc.getData()).startsWith("No users online\n")){
+						socket.close();
+						break;
+					}
+				} catch (SocketTimeoutException e){
+					break;
+				}
 			}
+			System.out.println("done");
 		} catch (IOException e) {
+			System.out.println("exception");
+
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

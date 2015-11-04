@@ -12,8 +12,7 @@ public class UPDHandler extends Handler {
 	private DatagramPacket packet;
 	private DatagramSocket dSoc;
 
-	public UPDHandler(DatagramSocket dSoc, DatagramPacket packet/*, HashMap<String, User> users*/) {
-//		super(users);
+	public UPDHandler(DatagramSocket dSoc, DatagramPacket packet) {
 		this.dSoc = dSoc;
 		this.packet = packet;
 	}
@@ -21,30 +20,28 @@ public class UPDHandler extends Handler {
 	@Override
 	public void run() {
 		byte[] data = packet.getData();
-//		String answer = "";
 		try {
-			System.out.println("----------------------------------");
-			System.out.println("data: "+data.toString());
-			System.out.println("----------------------------------");
 
-			if(data.toString().equals("!list")){
-				data = "Online users:\n".getBytes();
-				dSoc.send(new DatagramPacket(data,data.length));
+			if(new String(data).startsWith("!list")){
+				if(!getOnline().isEmpty()){
+					data = "Online users:\n".getBytes();
+					packet.setData(data);
+					dSoc.send(packet);
 
-				for(User u: getOnline()){
-					data = u.getName().getBytes();
-					dSoc.send(new DatagramPacket(data,data.length));
-//					answer += String.format("* %s\n", u.getName());
+					for(User u: getOnline()){
+						data = u.getName().getBytes();
+						packet.setData(data);
+						dSoc.send(packet);
+					}
+				} else {
+					data = "No users online\n".getBytes();
 				}
 			} else {
 				data = "unknown request".getBytes();
-				dSoc.send(new DatagramPacket(data,data.length));
-//				answer = "unknown request";
 			}
 
-//			DatagramPacket p = new DatagramPacket(answer.getBytes(),answer.length());
-//			dSoc.send(p);
-			dSoc.close();
+			packet.setData(data);
+			dSoc.send(packet);
 
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
