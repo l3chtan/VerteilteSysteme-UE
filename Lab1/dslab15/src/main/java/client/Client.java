@@ -25,6 +25,7 @@ public class Client implements IClientCli, Runnable {
 	
 	private Socket socket;
 	private DatagramSocket dataSocket;
+	private ServerSocket sSoc;
 	
 	private TCPClient tcpCon;
 	private UDPClient udpCon;
@@ -80,7 +81,7 @@ public class Client implements IClientCli, Runnable {
 //		}
 		// TODO
 	}
-	
+/*	
 	private void listen(){
 		String msg ="";
 		while(listening){
@@ -112,7 +113,7 @@ public class Client implements IClientCli, Runnable {
 		tcpRead.start();
 		System.out.println("everything went fine");
 		return str;
-	}
+	}*/
 
 	@Override
 	@Command
@@ -204,6 +205,7 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String register(String privateAddress) throws IOException {
 		// TODO Auto-generated method stub
+		sSoc.
 		writer.println("!register "+privateAddress);
 		return null;
 	}
