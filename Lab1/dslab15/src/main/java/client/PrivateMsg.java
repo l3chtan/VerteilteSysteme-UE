@@ -32,7 +32,7 @@ public class PrivateMsg extends Thread {
 			wr.println("!ack");
 			soc.close();
       } catch (IOException e){
-        System.out.println(e.getClass() + ": "+e.getMessage());
+        System.out.println(e.getSimpleName() + ": "+e.getMessage());
       } finally {
         if(!soc.isClosed()){
           soc.close();
