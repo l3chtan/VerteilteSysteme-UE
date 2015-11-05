@@ -188,6 +188,16 @@ public class Client implements IClientCli, Runnable {
 		// TODO Auto-generated method stub
 		String subs[] = lookup(username).split(":");
 		Socket soc = new Socket(subs[0],Integer.parseInt(subs[1]));
+		
+		InputStreamReader in = new InputStreamReader(soc.getInputStream());
+		BufferedReader bufIn = new BufferedReader(in);
+			
+		OutputStreamWriter out = new OutputStreamWriter(soc.getOutputStream());
+		PrintWriter wr = new PrintWriter(out,true);
+		
+		wr.println(message);
+		shell.writeLine(bufIn.readLine());
+		soc.close();
 		return null;
 	}
 
@@ -204,8 +214,22 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	@Command
 	public String register(String privateAddress) throws IOException {
-		// TODO Auto-generated method stub
-		sSoc.
+		
+		String subs[] = privateAddress.split(":");
+		sSoc = new ServerSocket(Integer.parseInt(subs[1]);
+		/*TODO: put in new thread*/
+		while(true){
+			Socket soc = sSoc.accept();
+			
+			InputStreamReader in = new InputStreamReader(soc.getInputStream());
+			BufferedReader bufIn = new BufferedReader(in);
+			
+			OutputStreamWriter out = new OutputStreamWriter(soc.getOutputStream());
+			PrintWriter wr = new PrintWriter(out,true);
+			shell.writeLine(bufIn.readLine());
+			wr.println("!ack");
+			soc.close();
+		}
 		writer.println("!register "+privateAddress);
 		return null;
 	}
