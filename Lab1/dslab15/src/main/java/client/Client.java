@@ -25,11 +25,11 @@ public class Client implements IClientCli, Runnable {
 	
 	private Socket socket;
 	private DatagramSocket dataSocket;
-	private ServerSocket sSoc;
 	
 	private TCPClient tcpCon;
 	private UDPClient udpCon;
 	private TCPReader tcpRead;
+	private PrivateMsg pMsg;
 	private boolean listening;
 	
 	private BufferedReader reader;
@@ -216,20 +216,8 @@ public class Client implements IClientCli, Runnable {
 	public String register(String privateAddress) throws IOException {
 		
 		String subs[] = privateAddress.split(":");
-		sSoc = new ServerSocket(Integer.parseInt(subs[1]);
-		/*TODO: put in new thread*/
-		while(true){
-			Socket soc = sSoc.accept();
-			
-			InputStreamReader in = new InputStreamReader(soc.getInputStream());
-			BufferedReader bufIn = new BufferedReader(in);
-			
-			OutputStreamWriter out = new OutputStreamWriter(soc.getOutputStream());
-			PrintWriter wr = new PrintWriter(out,true);
-			shell.writeLine(bufIn.readLine());
-			wr.println("!ack");
-			soc.close();
-		}
+		pMsg = new PrivateMsg(subs[1],shell);
+		pMsg.start();
 		writer.println("!register "+privateAddress);
 		return null;
 	}
@@ -244,6 +232,7 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String exit() throws IOException {
 		// TODO Auto-generated method stub
+		pMsg.close();
 		socket.close();
 		return null;
 	}
