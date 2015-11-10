@@ -34,12 +34,9 @@ public class TCPListener extends Listener {
 				socs.add(soc);
 				pool.execute(new TCPHandler(soc));
 			}
-//			System.out.println("terminated");
 
 		} catch (IOException e) {
-			System.out.println("caught");
 			System.out.println(e.getClass().getSimpleName() + ": " + e.getMessage());
-			// e.printStackTrace();
 		} finally {
 			pool.shutdown();
 
@@ -64,7 +61,6 @@ public class TCPListener extends Listener {
 				if (sSoc != null && !sSoc.isClosed())
 					sSoc.close();
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				System.out.println(e1.getClass().getSimpleName() + ": " + e1.getMessage());
 			}
 		}

@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 import util.Config;
 
@@ -88,6 +85,7 @@ public class TCPHandler extends Handler{
 						break;
 
 					case "!lookup": 
+						System.out.println("body: "+body);
 						msg = getUser(body).getRegistry();
 						break;
 
@@ -99,7 +97,7 @@ public class TCPHandler extends Handler{
 						break;
 
 					default:
-						break; //maybe breaks loop
+						break;
 				}
 				if(!head.startsWith("!send")){
 					if(user != null){
@@ -109,23 +107,20 @@ public class TCPHandler extends Handler{
 					}
 				}
 
-			} while(line != null); //maybe use while(true) ?
-/*			} else {
-				wr.write("You must be logged in first: !login <username> <password>");
-			}*/
+			} while(line != null);
 				out.close();
 				in.close();
 				soc.close();
 		} catch (IOException e) {
 				System.out.println(e.getClass().getSimpleName() +": "+  e.getMessage());
 		} finally {
-			
-			if(soc != null && !soc.isClosed())
+			if(soc != null && !soc.isClosed()){
 				try {
 					soc.close();
 				} catch (IOException e1) {
 					System.out.println(e1.getClass().getSimpleName() +": "+  e1.getMessage());
 				}
+			}
 		}
 	}
 }

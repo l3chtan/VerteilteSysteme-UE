@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import cli.Command;
@@ -26,11 +25,9 @@ public class Client implements IClientCli, Runnable {
 	private Socket socket;
 	private DatagramSocket dataSocket;
 	
-	private TCPClient tcpCon;
 	private UDPClient udpCon;
 	private TCPReader tcpRead;
 	private PrivateMsg pMsg;
-	private boolean listening;
 	
 	private BufferedReader reader;
 	private PrintWriter writer;
@@ -61,70 +58,19 @@ public class Client implements IClientCli, Runnable {
 		shell.register(this);
 		
 		lastMsg = null;
-		listening = false;
-		
-		// TODO
 	}
 
 	@Override
 	public void run() {
-		
 		new Thread(shell).start();
-		
-//		while(true){
-//			try {
-//				shell.writeLine(reader.readLine());
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-		// TODO
 	}
-/*	
-	private void listen(){
-		String msg ="";
-		while(listening){
-			try {
-				msg = reader.readLine();
-				shell.writeLine(msg);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return;
-			}
-		}
-	}
-	
-	private String doIO(String msg){
-		String str = "";
-		try {
-			tcpRead.interrupt();
-			if(tcpRead.isInterrupted()){
-			if(msg != null){
-				writer.println(msg);
-			}
-				str = reader.readLine();
-			}
-		}catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		tcpRead.start();
-		System.out.println("everything went fine");
-		return str;
-	}*/
 
 	@Override
 	@Command
 	public String login(String username, String password) throws IOException {
-		// TODO Auto-generated method stub
 
-//		tcpCon = new TCPClient(config.getString("chatserver.host"),config.getInt("chatserver.tcp.port"),shell.getOut());
-//		tcpCon.start();
 		String host = config.getString("chatserver.host");
 		int port = config.getInt("chatserver.tcp.port");
-		
 		
 		try {
 			socket = new Socket(host,port);
@@ -133,25 +79,19 @@ public class Client implements IClientCli, Runnable {
 			reader = new BufferedReader(new InputStreamReader(in));
 			writer = new PrintWriter(new OutputStreamWriter(out),true);
 			
-			tcpRead = new TCPReader(reader,shell.getOut());
+			tcpRead = new TCPReader(reader,shell);
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(e.getClass().getSimpleName() + ": " + e.getMessage());
 		}
 			String str = "";
 			writer.println("!login " + username + " " + password);
 			
 			str = reader.readLine();
 		if(str.startsWith("Wrong")){
-//			tcpCon.close();
 			socket.close();
 			return null;
 		} 
-//		else {
-//			listening = true;
-//			listen();
-//		}
 			tcpRead.start();
 		return str;
 	}
@@ -159,9 +99,8 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	@Command
 	public String logout() throws IOException {
-		// TODO Auto-generated method stub
 		writer.println("!logout\n");
-//		tcpCon.close();
+		pMsg.close();
 		socket.close();
 		return "Successfully logged out.";
 	}
@@ -176,7 +115,6 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	@Command
 	public String list() throws IOException {
-		// TODO Auto-generated method stub
 			udpCon = new UDPClient(config.getString("chatserver.host"),config.getInt("chatserver.udp.port"),shell.getOut());
 			udpCon.start();
 		return null;
@@ -185,8 +123,16 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	@Command
 	public String msg(String username, String message) throws IOException {
-		// TODO Auto-generated method stub
-		String subs[] = lookup(username).split(":");
+		String ans = "";
+		tcpRead.setFlag(true);
+		writer.println("!lookup "+username);
+
+		ans = tcpRead.getMsg();
+		System.out.println("hallo");
+		tcpRead.setFlag(false);
+
+		String subs[] = ans.split(":");
+		System.out.println(subs[0]+" : "+subs[1]);
 		Socket soc = new Socket(subs[0],Integer.parseInt(subs[1]));
 		
 		InputStreamReader in = new InputStreamReader(soc.getInputStream());
@@ -204,11 +150,9 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	@Command
 	public String lookup(String username) throws IOException {
-		// TODO Auto-generated method stub
+		System.out.println("lookup");
 		writer.println("!lookup "+username);
-		tcpRead.interrupt();
-		String addr = reader.readLine();
-		return addr;
+		return null;
 	}
 
 	@Override
@@ -216,7 +160,7 @@ public class Client implements IClientCli, Runnable {
 	public String register(String privateAddress) throws IOException {
 		
 		String subs[] = privateAddress.split(":");
-		pMsg = new PrivateMsg(subs[1],shell);
+		pMsg = new PrivateMsg(Integer.parseInt(subs[1]),shell);
 		pMsg.start();
 		writer.println("!register "+privateAddress);
 		return null;
@@ -231,7 +175,6 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	@Command
 	public String exit() throws IOException {
-		// TODO Auto-generated method stub
 		pMsg.close();
 		socket.close();
 		return null;
@@ -244,7 +187,6 @@ public class Client implements IClientCli, Runnable {
 	public static void main(String[] args) {
 		Client client = new Client(args[0], new Config("client"), System.in,
 				System.out);
-		// TODO: start the client
 		client.run();
 	}
 

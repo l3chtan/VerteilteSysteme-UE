@@ -121,6 +121,7 @@ public class Chatserver implements IChatserverCli, Runnable {
 				if(u == null){
 					userConfig.put(name, new User(name,-1));
 				}
+				u = userConfig.get(name);
 				u.setRegistry(config.getString(s));
 			}
 		}

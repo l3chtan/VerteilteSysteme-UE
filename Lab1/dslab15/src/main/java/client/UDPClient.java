@@ -5,7 +5,6 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 public class UDPClient extends Thread {
@@ -24,11 +23,12 @@ public class UDPClient extends Thread {
 	}
 	
 	private synchronized void writeOut(byte[] msg){
-		try {
-			out.write(msg);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		synchronized(out){
+			try {
+				out.write(msg);
+			} catch (IOException e) {
+				System.out.println(e.getClass().getSimpleName() + ": "+e.getMessage());
+			}
 		}
 	}
 	
@@ -38,7 +38,6 @@ public class UDPClient extends Thread {
 		DatagramPacket rc = new DatagramPacket(buffer,buffer.length);
 		try {
 			socket = new DatagramSocket();
-//			System.out.println(new String(cmd));
 			socket.send(new DatagramPacket(cmd,cmd.length,InetAddress.getByName(host),port));
 
 			socket.setSoTimeout(1000);
@@ -46,7 +45,6 @@ public class UDPClient extends Thread {
 				try{
 					socket.receive(rc);
 					answer += String.format("%s\n", new String(rc.getData()));
-//					writeOut(rc.getData());
 					if(new String(rc.getData()).startsWith("No users online")){
 						writeOut(answer.getBytes());
 						break;
@@ -58,9 +56,10 @@ public class UDPClient extends Thread {
 				}
 			}
 		} catch (IOException e) {
-			socket.close();
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if(socket != null && !socket.isClosed()){
+				socket.close();
+			}
+			System.out.println(e.getClass().getSimpleName() + ": "+e.getMessage());
 		}
 	}
 
